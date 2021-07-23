@@ -1,12 +1,14 @@
+let total = 10000;
 const gameEngine = (number: number) : boolean => {
-  const rand = Math.floor(Math.random() *2);
+  const rand = Math.round(Math.random());
   if (number === rand) return true;
   return false;
 }
 export const gamePlay = (number: number, amount: number) => {
   if (gameEngine(number)) {
-    console.log('You win')
-  } else {
-    console.log('You lose')
+    total += amount;
+    return true;
   }
+  total-= amount;
+  return false;
 }

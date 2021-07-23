@@ -6,12 +6,12 @@ import { connectMongo } from "./mongo";
 
 (async () => {
   try {
-    // await initApollo();
+    await initApollo();
     // await connectMongo();
     // await initRedis();
     // await connectEvoKafkaProducer();
     // initTronWeb();
-    gamePlay(1, 8);
+    gamePlay(1, 1000);
   } catch (e) {
     throw e;
   }
@@ -19,8 +19,8 @@ import { connectMongo } from "./mongo";
 
 
 export async function wait(milsecs: number) {
-  return new Promise((res,rej)=>{
-    setTimeout(()=>res("Ok"),milsecs)
+  return new Promise((res, rej)=>{
+    setTimeout(() => res("Ok"), milsecs)
   })
 }
 

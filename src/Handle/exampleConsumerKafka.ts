@@ -46,16 +46,4 @@ export const connectEvoKafkaProducer = async () => {
 let compare : number;
 const resolveMessage = (parseValue:any) => {
   console.log(parseValue);
-  if(!compare) {
-    compare = parseValue.blockNumber;
-    return;
-  }
-  if(parseValue.blockNumber - compare !== 1) {
-    console.log(parseValue);
-    throw new Error('Faile!');
-  }
-  if(parseValue.blockNumber === compare) {
-    throw new Error('blockNumber match!');
-  }
-  compare = parseValue.blockNumber;
 };
