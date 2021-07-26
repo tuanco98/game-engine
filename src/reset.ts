@@ -1,7 +1,7 @@
-import { connectMongo, requestLogs } from "./mongo"
+import { connectMongo, requestUsers } from "./mongo"
 
 (async()=>{
     await connectMongo()
-    const delRes = await requestLogs.deleteMany({})
+    const delRes = await requestUsers.deleteMany({})
     console.log(`${delRes.deletedCount} was deleted`)
 })()

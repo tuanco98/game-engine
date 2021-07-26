@@ -4,12 +4,14 @@ import { errorConsoleLog, successConsoleLog } from "./color-log";
 import { CONFIG_MONGO_URI } from "./config";
 
 
-export let requestLogs: Collection;
+export let requestUsers: Collection;
+export let requestHistorys: Collection;
 
 export let mongo: MongoClient;
 
 export const collections = {
-  requestLogs: "requestLogs",
+  requestUsers: "requestUsers",
+  requestHistorys: "requestHistorys",
 };
 
 export const connectMongo = async () => {
@@ -50,7 +52,8 @@ export const connectMongo = async () => {
     });
 
     const db = mongo.db();
-    requestLogs = db.collection(collections.requestLogs);
+    requestUsers = db.collection(collections.requestUsers);
+    requestHistorys = db.collection(collections.requestHistorys);
 
     await Promise.all([]);
 

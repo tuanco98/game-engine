@@ -9,6 +9,7 @@ export const typeDefs = gql`
   }
   
   type Mutation {
+    registerUser(address: String): String
     userPlay(number: Int, amount: Float): String
     user_withdraw(address: String, amount: Float): String
   }

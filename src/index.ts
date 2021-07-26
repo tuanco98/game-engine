@@ -1,4 +1,5 @@
 import { initApollo } from "./apollo";
+import { isAccountServer } from "./Handle/accountSever";
 import { initRedis, ioredis } from "./Handle/exampleRedis";
 import { initTronWeb } from "./Handle/exampleTronweb";
 import { gamePlay } from "./Handle/gameEngine";
@@ -7,11 +8,11 @@ import { connectMongo } from "./mongo";
 (async () => {
   try {
     await initApollo();
-    // await connectMongo();
+    await connectMongo();
+    await isAccountServer();
     // await initRedis();
     // await connectEvoKafkaProducer();
     // initTronWeb();
-    gamePlay(1, 1000);
   } catch (e) {
     throw e;
   }
