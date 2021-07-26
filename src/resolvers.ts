@@ -23,7 +23,7 @@ export const resolvers = {
       const { address } = args;
       const find = await requestUsers.findOne({ address });
       if (find) return "This address already exists";
-      initAccount(address);
+      initAccount(address, 'client');
       return "OK";
     },
     userPlay: async (parent: any, args: playGame) => {

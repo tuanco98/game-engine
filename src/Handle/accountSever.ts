@@ -1,9 +1,10 @@
 import { CONFIG_ADDRESS_TRON_SERVER } from "../config";
 import { requestUsers } from "../mongo"
 
-export const initAccount = (address: String) => {
+export const initAccount = (address: String, typeAccount: String) => {
   return requestUsers.insertOne({
     address,
+    typeAccount,
     balance: 0,
     totalGameCount: 0,
     totalGameAmount: 0,
@@ -20,7 +21,7 @@ export const initAccount = (address: String) => {
 export const isAccountServer = async () => {
   const find = await requestUsers.findOne({ address: CONFIG_ADDRESS_TRON_SERVER });
   if (!find) {
-    initAccount(CONFIG_ADDRESS_TRON_SERVER);
+    initAccount(CONFIG_ADDRESS_TRON_SERVER, 'server');
   }
   return 'OK';
 }
