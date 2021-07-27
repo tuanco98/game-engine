@@ -1,10 +1,10 @@
 import { ioredis } from "./exampleRedis";
 import { Kafka } from "kafkajs";
 
-const kafkaClientId = "dev";
+const kafkaClientId = "tuan-dev";
 const kafkaBrokers = ["139.99.210.62:9193"];
-const kafkaGroupId = "group-dev";
-const topicName = "block";
+const kafkaGroupId = "group-dev-2";
+const topicName = "contractevent";
 
 const kafka = new Kafka({
   clientId: kafkaClientId,
@@ -14,7 +14,7 @@ const kafka = new Kafka({
   connectionTimeout: 5000,
   requestTimeout: 60000,
 });
-
+let first_time=false
 const kafkaConsumer = kafka.consumer({ groupId: kafkaGroupId });
 
 export const connectEvoKafkaProducer = async () => {
@@ -26,7 +26,8 @@ export const connectEvoKafkaProducer = async () => {
       eachMessage: async ({ topic, partition, message }) => {
         try {
           const value = message?.value?.toString();
-        
+          if(first_time) throw new Error('not the first time')
+          //first_time=true
           if (!value) throw new Error(`Cannot get value of in topic ${topic}`);
 
           const parseValue = JSON.parse(value) as any;
@@ -45,5 +46,8 @@ export const connectEvoKafkaProducer = async () => {
 };
 let compare : number;
 const resolveMessage = (parseValue:any) => {
-  console.log(parseValue);
+  const {eventName,topicMap} =parseValue as {eventName:string,topicMap:{from:string,to:string}}
+  if(eventName==="Transfer"&&topicMap.to==="TK3JWFLgeitDmXAUoGSSLBjPuXc9WjoA8o"){
+      console.log(parseValue)
+  }
 };

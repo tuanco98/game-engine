@@ -2,33 +2,26 @@ import {
   CONFIG_ADDRESS_TRON_CLIENT,
   CONFIG_ADDRESS_TRON_SERVER,
 } from "../config";
-import { requestUsers } from "../mongo";
+import { requestHistorys, requestUsers } from "../mongo";
 
-type infoAccount = {
-  address: String;
-  balance: number;
-  totalGameCount: number;
-  totalGameAmount: number;
-  totalServerWin: number;
-  totalServerLose: number;
-  totalWithdrawAmount: number;
-  totalUserWin: number;
-  totalUserLose: number;
-  totalDepositCount: number;
-  totalWithdrawCount: number;
-  totalDepositAmount: number;
+const result = {
+  message: '',
+  result: 0,
+  payout: 0,
 };
+
 const gameEngine = (number: number): boolean => {
   const rand = Math.round(Math.random());
-  if (number === rand) return true;
+  result.result = rand;
+  if (number === rand) return true
   return false;
 };
 const clientWin = async (
-  server: infoAccount,
-  client: infoAccount,
+  server: any,
+  client: any,
   amount: number
 ) => {
-  requestUsers.updateOne(
+  await requestUsers.updateOne(
     {
       address: CONFIG_ADDRESS_TRON_CLIENT,
     },
@@ -42,7 +35,7 @@ const clientWin = async (
       },
     }
   );
-  requestUsers.updateOne(
+  await requestUsers.updateOne(
     {
       address: CONFIG_ADDRESS_TRON_SERVER,
     },
@@ -58,11 +51,11 @@ const clientWin = async (
   );
 };
 const clientLose = async (
-  server: infoAccount,
-  client: infoAccount,
+  server: any,
+  client: any,
   amount: number
 ) => {
-  requestUsers.updateOne(
+  await requestUsers.updateOne(
     {
       address: CONFIG_ADDRESS_TRON_CLIENT,
     },
@@ -76,7 +69,7 @@ const clientLose = async (
       },
     }
   );
-  requestUsers.updateOne(
+  await requestUsers.updateOne(
     {
       address: CONFIG_ADDRESS_TRON_SERVER,
     },
@@ -91,6 +84,15 @@ const clientLose = async (
     }
   );
 };
+const saveHistory = (history: any) => {
+  requestHistorys.insertOne({
+    address: CONFIG_ADDRESS_TRON_CLIENT,
+    number: history.number,
+    result: history.result,
+    payout: history.payout,
+    time: Date.now(),
+  })
+}
 export const gamePlay = async (number: number, amount: number) => {
   try {
     const findClient = await requestUsers.findOne({
@@ -101,15 +103,20 @@ export const gamePlay = async (number: number, amount: number) => {
     });
     if (amount > findClient.balance)
       throw new Error("balance is not available");
-    if (findServer > findServer.balance)
+    if (amount > findServer.balance)
       throw new Error("server account has expired");
 
     if (gameEngine(number)) {
-      clientWin(findClient, findServer, amount);
-      return "You win";
+      clientWin(findServer, findClient, amount);
+      result.message = 'You win';
+      result.payout = amount * 2;
+    } else {
+      clientLose(findServer, findClient, amount);
+      result.message = 'You lose';
+      result.payout = amount * 0;
     }
-    clientLose(findClient, findServer, amount);
-    return "You lose";
+    saveHistory(result)
+    return result;
   } catch (error) {
     throw error;
   }
