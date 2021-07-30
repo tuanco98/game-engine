@@ -5,18 +5,21 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "nodemon --exec ts-node src/index.ts"
+    "dev": "nodemon --exec ts-node src/index.ts",
+    "dev:reset": "ts-node src/reset.ts"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
     "apollo-server": "^2.25.2",
     "axios": "^0.21.1",
+    "bitcoinjs-lib": "^5.2.0",
     "dotenv": "^10.0.0",
     "graphql": "^15.5.1",
     "ioredis": "^4.27.6",
     "kafkajs": "^1.15.0",
-    "mongodb": "^3.6.9"
+    "mongodb": "^3.6.9",
+    "tronweb": "^3.2.7"
   },
   "devDependencies": {
     "@types/mongodb": "^3.6.19",

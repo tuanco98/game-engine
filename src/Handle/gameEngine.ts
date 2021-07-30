@@ -1,11 +1,9 @@
-import {
-  CONFIG_ADDRESS_TRON_CLIENT,
-  CONFIG_ADDRESS_TRON_SERVER,
-} from "../config";
+import { CONFIG_ADDRESS_TRON_SERVER } from "../config";
 import { requestHistorys, requestUsers } from "../mongo";
 
 const result = {
-  message: '',
+  message: "",
+  balance: 0,
   result: 0,
   payout: 0,
 };
@@ -13,26 +11,17 @@ const result = {
 const gameEngine = (number: number): boolean => {
   const rand = Math.round(Math.random());
   result.result = rand;
-  if (number === rand) return true
+  if (number === rand) return true;
   return false;
 };
-const clientWin = async (
-  server: any,
-  client: any,
-  amount: number
-) => {
+
+const updateThenEndGame = async (server: any, client: any) => {
   await requestUsers.updateOne(
     {
-      address: CONFIG_ADDRESS_TRON_CLIENT,
+      address: client.address,
     },
     {
-      $set: {
-        balance: client.balance + amount,
-        totalGameCount: ++client.totalGameCount,
-        totalGameAmount: client.totalGameAmount + amount,
-        totalServerLose: ++client.totalServerLose,
-        totalUserWin: ++client.totalUserWin,
-      },
+      $set: client,
     }
   );
   await requestUsers.updateOne(
@@ -40,82 +29,74 @@ const clientWin = async (
       address: CONFIG_ADDRESS_TRON_SERVER,
     },
     {
-      $set: {
-        balance: server.balance - amount,
-        totalGameCount: ++server.totalGameCount,
-        totalGameAmount: server.totalGameAmount + amount,
-        totalServerLose: ++server.totalServerLose,
-        totalUserWin: ++server.totalUserWin,
-      },
+      $set: server,
     }
   );
 };
-const clientLose = async (
-  server: any,
-  client: any,
-  amount: number
-) => {
-  await requestUsers.updateOne(
-    {
-      address: CONFIG_ADDRESS_TRON_CLIENT,
-    },
-    {
-      $set: {
-        balance: client.balance - amount,
-        totalGameCount: ++client.totalGameCount,
-        totalGameAmount: client.totalGameAmount + amount,
-        totalUserLose: ++client.totalUserLose,
-        totalServerWin: ++client.totalServerWin,
-      },
-    }
-  );
-  await requestUsers.updateOne(
-    {
-      address: CONFIG_ADDRESS_TRON_SERVER,
-    },
-    {
-      $set: {
-        balance: server.balance + amount,
-        totalGameCount: ++server.totalGameCount,
-        totalGameAmount: server.totalGameAmount + amount,
-        totalUserLose: ++server.totalUserLose,
-        totalServerWin: ++server.totalServerWin,
-      },
-    }
-  );
-};
-const saveHistory = (history: any) => {
+
+const saveHistory = (address: string, history: any) => {
   requestHistorys.insertOne({
-    address: CONFIG_ADDRESS_TRON_CLIENT,
+    address,
     number: history.number,
     result: history.result,
     payout: history.payout,
     time: Date.now(),
-  })
-}
-export const gamePlay = async (number: number, amount: number) => {
+  });
+};
+export const gamePlay = async (address: string, number: number, amount: number) => {
   try {
     const findClient = await requestUsers.findOne({
-      address: CONFIG_ADDRESS_TRON_CLIENT,
+      address,
     });
     const findServer = await requestUsers.findOne({
       address: CONFIG_ADDRESS_TRON_SERVER,
     });
+    
+    if (!findClient) throw new Error('User not found');
+    if(findClient.isLock) throw new Error('User has been locked')
     if (amount > findClient.balance)
       throw new Error("balance is not available");
     if (amount > findServer.balance)
       throw new Error("server account has expired");
+    // Thực hiện trừ tiền của user
+    findClient.balance -= amount;
 
     if (gameEngine(number)) {
-      clientWin(findServer, findClient, amount);
-      result.message = 'You win';
-      result.payout = amount * 2;
+      // clientWin(findServer, findClient, amount);
+      result.message = "You win";
+      result.payout = amount + (amount * 0.9);
+
+      findClient.balance += amount + (amount * 0.9);
+      findClient.totalGameCount++;
+      findClient.totalGameAmount += amount;
+      findClient.totalServerLose++;
+      findClient.totalUserWin++;
+
+      findServer.balance -= (amount * 0.9);
+      findServer.totalGameCount++;
+      findServer.totalGameAmount += amount;
+      findServer.totalServerLose++;
+      findServer.totalUserWin++;
     } else {
-      clientLose(findServer, findClient, amount);
-      result.message = 'You lose';
+      // clientLose(findServer, findClient, amount);
+      result.message = "You lose";
       result.payout = amount * 0;
+
+      findClient.balance += amount * 0;
+      findClient.totalGameCount++;
+      findClient.totalGameAmount + amount;
+      findClient.totalUserLose++;
+      findClient.totalServerWin++;
+
+      findServer.balance += amount;
+      findServer.totalGameCount++;
+      findServer.totalGameAmount + amount;
+      findServer.totalUserLose++;
+      findServer.totalServerWin++;
     }
-    saveHistory(result)
+    result.balance = findClient.balance;
+    updateThenEndGame(findServer, findClient);
+    saveHistory(address, result);
     return result;
   } catch (error) {
     throw error;

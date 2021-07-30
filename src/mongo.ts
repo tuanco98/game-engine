@@ -6,12 +6,14 @@ import { CONFIG_MONGO_URI } from "./config";
 
 export let requestUsers: Collection;
 export let requestHistorys: Collection;
+export let requestTransfers: Collection;
 
 export let mongo: MongoClient;
 
 export const collections = {
   requestUsers: "requestUsers",
   requestHistorys: "requestHistorys",
+  requestTransfers: "requestTransfers",
 };
 
 export const connectMongo = async () => {
@@ -54,7 +56,8 @@ export const connectMongo = async () => {
     const db = mongo.db();
     requestUsers = db.collection(collections.requestUsers);
     requestHistorys = db.collection(collections.requestHistorys);
-
+    requestTransfers = db.collection(collections.requestTransfers);
+    
     await Promise.all([]);
 
     successConsoleLog(`🚀 mongodb: connected`);

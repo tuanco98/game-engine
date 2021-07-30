@@ -3,6 +3,7 @@ import { gql } from "apollo-server";
 export const typeDefs = gql`
   type Result {
     message: String,
+    balance: Float,
     result: Int,
     payout: Float,
   }
@@ -14,25 +15,78 @@ export const typeDefs = gql`
     payout: Float,
     time: String,
   }
-  
-  type RequestHistory {
+
+  type ResponseHistory {
     data: [History]
     message: String,
     pageSize: Int,
     currentPage: Int,
+    totalpage: Int,
+    totalElements: Int,
   }
 
+  type UserGet {
+    balance: Float,
+    lockBalance: Float,
+    isLock: Boolean,
+    totalGameCount: Int,
+    totalGameAmount: Float,
+    totalDepositCount: Int,
+    totalDepositAmount: Float,
+    totalUserLose: Int,
+    totalUserWin: Int,
+    totalWithdrawCount: Int,
+    totalWithdrawAmount: Float,
+  }
+  type GetListUser {
+    data: [UserGet]
+    message: String,
+    pageSize: Int,
+    currentPage: Int,
+    totalpage: Int,
+    totalElements: Int,
+
+  }
+  type FundGet {
+    balance: Float,
+    totalGameCount: Int,
+    totalGameAmount: Float,
+    totalUserCount: Int,
+    totalDepositCount: Int,
+    totalDepositAmount: Float,
+    totalUserLose: Int,
+    totalUserWin: Int,
+    totalServerWin: Int,
+    totalServerLose: Int,
+    totalWithdrawCount: Int,
+    totalWithdrawAmount: Float,
+  }
+  type ChangeBalanceUser {
+    message: String,
+    balance: Float,
+  }
+  type LockUser {
+    message: String,
+    isLock: Boolean,
+    balance: Float,
+    lockBalance: Float,
+  }
   type Query {
-    fund_get: String
-    user_get(address: String): String
-    user_game_history_get(address: String!, pageNumber: Int!, pageSize: Int!): RequestHistory
-    game_get(gameId: String): String
+    fundGet: FundGet
+    userGet(address: String!): UserGet
+    userGameHistoryGet(address: String!, pageNumber: Int!, pageSize: Int!): ResponseHistory
+    getListUser(pageNumber: Int!, pageSize: Int!) : GetListUser
+    gameGet(gameId: String!): History
   }
   
   type Mutation {
-    registerUser(address: String): String
-    userPlay(number: Int, amount: Float): Result
-    user_withdraw(address: String, amount: Float): String
+    registerUser(address: String!): String
+    userPlay(address: String!, number: Int!, amount: Float!): Result
+    userWithdraw(address: String!, amount: Float!): String
+    changeBalanceUser(fromAddress: String!, toAddress: String!, amount: Float!): ChangeBalanceUser
+    lockUser(address: String): LockUser
+    unLockUser(address: String): LockUser
+    removeUser(address: String): String
   }
 
   type Subscription {
