@@ -1,3 +1,5 @@
+import { PubSub, withFilter } from "apollo-server";
+const pubSub = new PubSub()
 import { CONFIG_ADDRESS_TRON_SERVER } from "./config";
 import { getListUser, initAccountClient, lockUser, removeUser, unLockUser } from "./Handle/account";
 import { gamePlay } from "./Handle/gameEngine";
@@ -97,8 +99,9 @@ export const resolvers = {
         const { address } = args;
         const find = await requestUsers.findOne({ address });
         if (find) return "This address already exists";
-        initAccountClient(address, 0);
-        return "OK";
+        const res = await initAccountClient(address, 0);
+        pubSub.publish('CREATE_USER', { userSub: res.ops[0] })
+        return res.ops[0];
       } catch (error) {
         throw error;
       }
@@ -129,9 +132,9 @@ export const resolvers = {
     }
   },
   Subscription: {
-    gameSub: () => {
-      return "OK";
-    },
+    userSub: {
+      subscribe: () => pubSub.asyncIterator(['CREATE_USER'])
+    } 
   },
 };
 

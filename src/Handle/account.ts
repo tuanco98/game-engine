@@ -22,7 +22,7 @@ export const initAccountServer = async (address: String, balance: number) => {
   })
 }
 export const initAccountClient = async (address: String, balance: number) => {
-  await requestUsers.insertOne({
+  const res = await requestUsers.insertOne({
     address,
     typeAccount: 'client',
     balance,
@@ -40,10 +40,9 @@ export const initAccountClient = async (address: String, balance: number) => {
     totalWithdrawCount: 0,
     totalDepositAmount: 0,
   })
-  const findServer = await requestUsers.findOne({ address: CONFIG_ADDRESS_TRON_SERVER, typeAccount: 'server'})
   await requestUsers.findOneAndUpdate({ address: CONFIG_ADDRESS_TRON_SERVER, typeAccount: 'server' },
-    { $set: { totalUserCount: findServer.totalUserCount += 1 }})
-  return 'OK';
+    { $inc: { totalUserCount: 1 }})
+  return res;
 }
 export const getListUser = async (req: { pageNumber: number, pageSize: number }) => {
   try {
@@ -110,10 +109,9 @@ export const removeUser = async (req: { address: string }) => {
 
   await requestUsers.findOneAndDelete({ address })
   const balance = findUser.balance + findUser.lockBalance;
-  const findServer = await requestUsers.findOne({ address: CONFIG_ADDRESS_TRON_SERVER , typeAccount: 'server' })
   requestUsers.findOneAndUpdate(
     { address: CONFIG_ADDRESS_TRON_SERVER },
-    { $set: { balance: findServer.balance + balance , totalUserCount: findServer.totalUserCount -= 1 }}
+    { $inc: { balance: balance , totalUserCount: -1 }}
     )
   return 'Remove user success';
 }

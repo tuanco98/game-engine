@@ -26,6 +26,7 @@ export const typeDefs = gql`
   }
 
   type UserGet {
+    address: String
     balance: Float,
     lockBalance: Float,
     isLock: Boolean,
@@ -45,9 +46,9 @@ export const typeDefs = gql`
     currentPage: Int,
     totalpage: Int,
     totalElements: Int,
-
   }
   type FundGet {
+    address: String,
     balance: Float,
     totalGameCount: Int,
     totalGameAmount: Float,
@@ -80,7 +81,7 @@ export const typeDefs = gql`
   }
   
   type Mutation {
-    registerUser(address: String!): String
+    registerUser(address: String!): UserGet
     userPlay(address: String!, number: Int!, amount: Float!): Result
     userWithdraw(address: String!, amount: Float!): String
     changeBalanceUser(fromAddress: String!, toAddress: String!, amount: Float!): ChangeBalanceUser
@@ -90,6 +91,6 @@ export const typeDefs = gql`
   }
 
   type Subscription {
-    gameSub: String
+    userSub: UserGet
   }
 `;

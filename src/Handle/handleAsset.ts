@@ -1,9 +1,10 @@
-import { CONFIG_ADDRESS_TRON_SERVER, CONFIG_CONTRACT_TRC20 } from "../config";
+import { wait } from "..";
+import { CONFIG_ADDRESS_TRON_SERVER, CONFIG_CONTRACT_TRC20, CONFIG_MONGO_URI } from "../config";
 import { initTronWeb, tronWeb } from "../config/configTronweb";
-import { requestUsers } from "../mongo";
+import { mongo, requestUsers } from "../mongo";
 import { initAccountClient } from "./account";
 import { transferBalance } from "./type";
-
+const { MongoClient } = require('mongodb');
 export const userDeposit = async (address: string, value: number) => {
   let findUser = await requestUsers.findOne({
     address,
@@ -81,8 +82,11 @@ export const userWithdraw = async (address: string, value: number) => {
   );
 };
 export const transferUserToUser = async (req: transferBalance) => {
+  const session = mongo.startSession();
+  session.startTransaction();
   try {
     const { fromAddress, toAddress, amount } = req;
+    // transfer(fromAddress, toAddress, amount)
     const findUserSend = await requestUsers.findOne({
       address: fromAddress,
       typeAccount: "client",
@@ -100,30 +104,53 @@ export const transferUserToUser = async (req: transferBalance) => {
     if (findUserSend.balance < amount)
       throw new Error("balance is not available");
 
-    findUserSend.balance -= amount;
-    findUserReceive.balance += amount;
-    await Promise.all([
-      requestUsers.findOneAndUpdate(
-        { address: fromAddress },
-        { $set: { balance: findUserSend.balance } }
-      ),
-      requestUsers.findOneAndUpdate(
-        { address: toAddress },
-        { $set: { balance: findUserReceive.balance } }
-      ),
-    ]);
-    const result = await requestUsers.findOne({
-      address: fromAddress,
-      typeAccount: "client",
-    });
+    const result = await requestUsers.findOneAndUpdate(
+      { address: fromAddress },
+      { $inc: { balance: - amount }},
+      { session, returnOriginal: false })
+      .then(res => res.value)
+    // await wait(10000);
+    // if ( 1 === 1) throw new Error('rollback');
+    await requestUsers.findOneAndUpdate(
+      { address: toAddress },
+      { $inc: { balance: + amount }},
+      { session });
+    
+    await session.commitTransaction();
+    session.endSession();
     return {
       message: "success",
       balance: result.balance,
     };
   } catch (error) {
+    await session.abortTransaction();
+    session.endSession();
     throw error;
   }
 };
+const transfer = async (from: string, to: string , amount: number) => {
+  const session = mongo.startSession();
+  session.startTransaction();
+  try {
+    const opts = { session, returnOriginal: false };
+    const A = await await requestUsers
+      .findOneAndUpdate({ address: from }, { $inc: { balance: - amount } }, opts)
+      .then(res => res.value);
+    if (A.balance < 0) {
+      throw new Error('Không đủ tiền: ' + (A.balance + amount));
+    }
+
+    await session.commitTransaction();
+    session.endSession();
+    return;
+  } catch (error) {
+    // Nếu xảy ra lỗi, hãy hủy bỏ tất cả các giao dịch và quay trở lại trước khi sửa đổi
+    console.log('Loi ne');
+    await session.abortTransaction();
+    session.endSession();
+    throw error; // catch error
+  }
+}
 export const withdraw = async (address: string, amount: number) => {
   const usdt_trc20_contract = await tronWeb
     .contract()
