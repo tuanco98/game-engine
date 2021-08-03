@@ -1,5 +1,7 @@
+import { PubSub } from "apollo-server";
 import { CONFIG_ADDRESS_TRON_SERVER } from "../config";
 import { requestHistorys, requestUsers } from "../mongo";
+const pubSub = new PubSub();
 
 const result = {
   message: "",
@@ -105,7 +107,7 @@ export const gamePlay = async (
             totalUserWin: 1,
           },
         },
-        { returnOriginal: false}
+        { returnOriginal: false }
       ).then(res => res.value);
       await requestUsers.findOneAndUpdate(
         { address: CONFIG_ADDRESS_TRON_SERVER },
@@ -120,7 +122,6 @@ export const gamePlay = async (
         },
       );
     } else {
-      // clientLose(findServer, findClient, amount);
       result.message = "You lose";
       result.payout = amount * 0;
       res = await requestUsers.findOneAndUpdate(
@@ -150,8 +151,16 @@ export const gamePlay = async (
       );
     }
     result.balance = res.balance;
+    
     saveHistory(address, result);
-    return result;
+    return {
+      address,
+      number,
+      message: result.message,
+      result: result.result,
+      payout: result.payout,
+      balance: result.balance,
+    };
   } catch (error) {
     throw error;
   }

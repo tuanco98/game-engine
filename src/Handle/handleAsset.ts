@@ -1,10 +1,11 @@
-import { wait } from "..";
 import { CONFIG_ADDRESS_TRON_SERVER, CONFIG_CONTRACT_TRC20, CONFIG_MONGO_URI } from "../config";
 import { initTronWeb, tronWeb } from "../config/configTronweb";
 import { mongo, requestUsers } from "../mongo";
 import { initAccountClient } from "./account";
 import { transferBalance } from "./type";
-const { MongoClient } = require('mongodb');
+import { PubSub, withFilter } from "apollo-server";
+const pubSub = new PubSub();
+
 export const userDeposit = async (address: string, value: number) => {
   let findUser = await requestUsers.findOne({
     address,
@@ -128,29 +129,6 @@ export const transferUserToUser = async (req: transferBalance) => {
     throw error;
   }
 };
-const transfer = async (from: string, to: string , amount: number) => {
-  const session = mongo.startSession();
-  session.startTransaction();
-  try {
-    const opts = { session, returnOriginal: false };
-    const A = await await requestUsers
-      .findOneAndUpdate({ address: from }, { $inc: { balance: - amount } }, opts)
-      .then(res => res.value);
-    if (A.balance < 0) {
-      throw new Error('Không đủ tiền: ' + (A.balance + amount));
-    }
-
-    await session.commitTransaction();
-    session.endSession();
-    return;
-  } catch (error) {
-    // Nếu xảy ra lỗi, hãy hủy bỏ tất cả các giao dịch và quay trở lại trước khi sửa đổi
-    console.log('Loi ne');
-    await session.abortTransaction();
-    session.endSession();
-    throw error; // catch error
-  }
-}
 export const withdraw = async (address: string, amount: number) => {
   const usdt_trc20_contract = await tronWeb
     .contract()
@@ -163,7 +141,6 @@ export const withdraw = async (address: string, amount: number) => {
     });
   return txid;
 };
-
 export const getBalanceServer = async () => {
   const usdt_trc20_contract = await tronWeb
     .contract()

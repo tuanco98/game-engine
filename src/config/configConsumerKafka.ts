@@ -3,6 +3,7 @@ import { CONFIG_ADDRESS_TRON_SERVER, CONFIG_KAFKA_ADDRESS } from "../config";
 import { userDeposit, userWithdraw } from "../Handle/handleAsset";
 import { requestTransfers, requestUsers } from "../mongo";
 
+
 const kafkaClientId = "tuan-dev";
 const kafkaBrokers = [CONFIG_KAFKA_ADDRESS];
 const kafkaGroupId = "group-dev";
@@ -39,6 +40,7 @@ export const connectEvoKafkaProducer = async () => {
   }
 };
 const resolveMessage = async (parseValue: any) => {
+  console.log(parseValue);
   const { eventName, topicMap } = parseValue as {
     eventName: string;
     topicMap: { from: string; to: string };
@@ -48,12 +50,13 @@ const resolveMessage = async (parseValue: any) => {
       blockNumber: parseValue.blockNumber,
     });
     if (topicMap.to === CONFIG_ADDRESS_TRON_SERVER && !findTransfer) {
-      const { topicMap, dataMap } = parseValue;
+      const { topicMap, dataMap, timeStamp } = parseValue;
+      const amount = dataMap.value / 1000000;
       requestTransfers.insertOne({
-        typeTransfer: "deposit",
+        typeTransfer: "Deposit",
         information: parseValue,
       });
-      userDeposit(topicMap.from, dataMap.value / 1000000 * 0.9);
+      userDeposit(topicMap.from, amount * 0.9);
     }
     if (topicMap.from === CONFIG_ADDRESS_TRON_SERVER && !findTransfer) {
       requestTransfers.insertOne({

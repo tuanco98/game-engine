@@ -2,84 +2,100 @@ import { gql } from "apollo-server";
 
 export const typeDefs = gql`
   type Result {
-    message: String,
-    balance: Float,
-    result: Int,
-    payout: Float,
+    message: String
+    balance: Float
+    result: Int
+    payout: Float
   }
 
   type History {
-    _id: String,
-    address: String,
-    result: Int,
-    payout: Float,
-    time: String,
+    _id: String
+    address: String
+    result: Int
+    payout: Float
+    time: String
   }
 
   type ResponseHistory {
     data: [History]
-    message: String,
-    pageSize: Int,
-    currentPage: Int,
-    totalpage: Int,
-    totalElements: Int,
+    message: String
+    pageSize: Int
+    currentPage: Int
+    totalpage: Int
+    totalElements: Int
   }
 
   type UserGet {
     address: String
-    balance: Float,
-    lockBalance: Float,
-    isLock: Boolean,
-    totalGameCount: Int,
-    totalGameAmount: Float,
-    totalDepositCount: Int,
-    totalDepositAmount: Float,
-    totalUserLose: Int,
-    totalUserWin: Int,
-    totalWithdrawCount: Int,
-    totalWithdrawAmount: Float,
+    balance: Float
+    lockBalance: Float
+    isLock: Boolean
+    totalGameCount: Int
+    totalGameAmount: Float
+    totalDepositCount: Int
+    totalDepositAmount: Float
+    totalUserLose: Int
+    totalUserWin: Int
+    totalWithdrawCount: Int
+    totalWithdrawAmount: Float
   }
   type GetListUser {
     data: [UserGet]
-    message: String,
-    pageSize: Int,
-    currentPage: Int,
-    totalpage: Int,
-    totalElements: Int,
+    message: String
+    pageSize: Int
+    currentPage: Int
+    totalpage: Int
+    totalElements: Int
   }
   type FundGet {
-    address: String,
-    balance: Float,
-    totalGameCount: Int,
-    totalGameAmount: Float,
-    totalUserCount: Int,
-    totalDepositCount: Int,
-    totalDepositAmount: Float,
-    totalUserLose: Int,
-    totalUserWin: Int,
-    totalServerWin: Int,
-    totalServerLose: Int,
-    totalWithdrawCount: Int,
-    totalWithdrawAmount: Float,
+    address: String
+    balance: Float
+    totalGameCount: Int
+    totalGameAmount: Float
+    totalUserCount: Int
+    totalDepositCount: Int
+    totalDepositAmount: Float
+    totalUserLose: Int
+    totalUserWin: Int
+    totalServerWin: Int
+    totalServerLose: Int
+    totalWithdrawCount: Int
+    totalWithdrawAmount: Float
   }
   type ChangeBalanceUser {
-    message: String,
-    balance: Float,
+    message: String
+    balance: Float
   }
   type LockUser {
-    message: String,
-    isLock: Boolean,
+    message: String
+    isLock: Boolean
+    balance: Float
+    lockBalance: Float
+  }
+  type SubDeposit {
+    message: String
+    fromAddress: String
+    amount: Float
+    time: String
+  }
+  type SubGame {
+    address: String,
+    number: Int,
+    result: Int,
     balance: Float,
-    lockBalance: Float,
+    payout: Float,
+  }
+  type UserWithdraw {
+    address: String,
+    txid: String,
   }
   type Query {
     fundGet: FundGet
     userGet(address: String!): UserGet
     userGameHistoryGet(address: String!, pageNumber: Int!, pageSize: Int!): ResponseHistory
-    getListUser(pageNumber: Int!, pageSize: Int!) : GetListUser
+    getListUser(pageNumber: Int!, pageSize: Int!): GetListUser
     gameGet(gameId: String!): History
   }
-  
   type Mutation {
     registerUser(address: String!): UserGet
     userPlay(address: String!, number: Int!, amount: Float!): Result
@@ -92,5 +108,8 @@ export const typeDefs = gql`
 
   type Subscription {
     userSub: UserGet
+    userSubDeposit(address: String!): SubDeposit
+    userSubGame(address: String!): SubGame
+    userSubWithdraw(address: String!): UserWithdraw
   }
 `;

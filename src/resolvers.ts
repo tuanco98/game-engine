@@ -100,7 +100,7 @@ export const resolvers = {
         const find = await requestUsers.findOne({ address });
         if (find) return "This address already exists";
         const res = await initAccountClient(address, 0);
-        pubSub.publish('CREATE_USER', { userSub: res.ops[0] })
+        pubSub.publish('CREATE_USER', { userSub: res.ops[0] });
         return res.ops[0];
       } catch (error) {
         throw error;
@@ -109,14 +109,21 @@ export const resolvers = {
     userPlay: async (parent: any, args: playGame) => {
       try {
         const {address, number, amount } = args;
-        return gamePlay(address, number, amount);
+        const result = await gamePlay(address, number, amount);
+        pubSub.publish('USER_GAME', { userSubGame: result})
+        return result;
       } catch (error) {
         throw error;
       }
     },
-    userWithdraw: (parent: any, agrs: { address: string, amount: number }) => {
+    userWithdraw: async (parent: any, agrs: { address: string, amount: number }) => {
       const { address, amount } = agrs;
-      return user_Withdraw(address, amount);
+      const txid = await user_Withdraw(address, amount);
+      pubSub.publish('USER_WITHDRAW', { userSubWithdraw: { 
+        address,
+        txid,
+      }})
+      return txid;
     },
     changeBalanceUser: (parent: any, agrs: transferBalance) => {
       return transferUserToUser(agrs);
@@ -134,7 +141,31 @@ export const resolvers = {
   Subscription: {
     userSub: {
       subscribe: () => pubSub.asyncIterator(['CREATE_USER'])
-    } 
+    },
+    userSubDeposit: {
+      subscribe: withFilter(
+        () => pubSub.asyncIterator(['USER_DEPOSIT']),
+        (payload, variables) => {
+          return (payload.userSubDeposit.fromAddress === variables.fromAddress);
+        },
+      ),
+    },
+    userSubGame: {
+      subscribe: withFilter(
+        () => pubSub.asyncIterator('USER_GAME'),
+        (payload, variables) => {
+          return (payload.userSubGame.address === variables.address);
+        },
+      ),
+    },
+    userSubWithdraw: {
+      subscribe: withFilter(
+        () => pubSub.asyncIterator('USER_WITHDRAW'),
+        (payload, variables) => {
+          return (payload.userSubWithdraw.address === variables.address);
+        },
+      ),
+    },
   },
 };
 
