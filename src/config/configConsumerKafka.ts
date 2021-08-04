@@ -2,6 +2,7 @@ import { Kafka } from "kafkajs";
 import { CONFIG_ADDRESS_TRON_SERVER, CONFIG_KAFKA_ADDRESS } from "../config";
 import { userDeposit, userWithdraw } from "../Handle/handleAsset";
 import { requestTransfers, requestUsers } from "../mongo";
+import { publishDeposit } from "../resolvers";
 
 
 const kafkaClientId = "tuan-dev";
@@ -40,7 +41,6 @@ export const connectEvoKafkaProducer = async () => {
   }
 };
 const resolveMessage = async (parseValue: any) => {
-  console.log(parseValue);
   const { eventName, topicMap } = parseValue as {
     eventName: string;
     topicMap: { from: string; to: string };
@@ -57,6 +57,8 @@ const resolveMessage = async (parseValue: any) => {
         information: parseValue,
       });
       userDeposit(topicMap.from, amount * 0.9);
+      publishDeposit(topicMap.from, amount * 0.9, timeStamp);
+      console.log(parseValue);
     }
     if (topicMap.from === CONFIG_ADDRESS_TRON_SERVER && !findTransfer) {
       requestTransfers.insertOne({
@@ -64,6 +66,5 @@ const resolveMessage = async (parseValue: any) => {
         information: parseValue,
       });
     }
-    console.log(parseValue);
   }
 };

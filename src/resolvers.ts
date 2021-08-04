@@ -75,12 +75,21 @@ const user_Withdraw = async (address: string, amount: number) => {
   ])
   return txid;
 }
+export const publishDeposit = (fromAddress: string, amount: number, time: string) => {
+  pubSub.publish('USER_DEPOSIT', { userSubDeposit: {
+    message: 'Deposit',
+    fromAddress,
+    amount,
+    time,
+  }})
+  return;
+}
 export const resolvers = {
   Query: {
     userGameHistoryGet: async (parent: any, args: inputGetHistory) => {
       return userGameGetHistoty(args);
     },
-    gameGet: (parent: any, args: { gameId: string }) =>{
+    gameGet: (parent: any, args: { gameId: string }) => {
       return gameGet(args.gameId);
     },
     fundGet: () => {
@@ -98,7 +107,7 @@ export const resolvers = {
       try {
         const { address } = args;
         const find = await requestUsers.findOne({ address });
-        if (find) return "This address already exists";
+        if (find) throw new Error ("This address already exists");
         const res = await initAccountClient(address, 0);
         pubSub.publish('CREATE_USER', { userSub: res.ops[0] });
         return res.ops[0];
@@ -140,13 +149,13 @@ export const resolvers = {
   },
   Subscription: {
     userSub: {
-      subscribe: () => pubSub.asyncIterator(['CREATE_USER'])
+      subscribe: () => pubSub.asyncIterator(['CREATE_USER']),
     },
     userSubDeposit: {
       subscribe: withFilter(
-        () => pubSub.asyncIterator(['USER_DEPOSIT']),
+        () => pubSub.asyncIterator('USER_DEPOSIT'),
         (payload, variables) => {
-          return (payload.userSubDeposit.fromAddress === variables.fromAddress);
+          return (payload.userSubDeposit.fromAddress === variables.address);
         },
       ),
     },

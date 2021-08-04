@@ -18,50 +18,6 @@ const gameEngine = (number: number): boolean => {
   return false;
 };
 
-const updateThenEndGame = async (param: any) => {
-  const {
-    addressClient,
-    addressServer,
-    balanceClient,
-    balanceServer,
-    amount,
-    totalGameCount,
-    totalServerLose,
-    totalServerWin,
-    totalUserWin,
-    totalUserLose,
-  } = param;
-  const res = await requestUsers.findOneAndUpdate(
-    { address: addressClient },
-    {
-      $inc: {
-        balance: balanceClient,
-        totalGameCount,
-        totalGameAmount: amount,
-        totalServerLose,
-        totalServerWin,
-        totalUserWin,
-        totalUserLose,
-      },
-    },
-  );
-  await requestUsers.findOneAndUpdate(
-    { address: addressServer },
-    {
-      $inc: {
-        balance: balanceServer,
-        totalGameCount,
-        totalGameAmount: amount,
-        totalServerLose,
-        totalServerWin,
-        totalUserWin,
-        totalUserLose,
-      },
-    },
-  );
-  return res;
-};
-
 const saveHistory = (address: string, history: any) => {
   requestHistorys.insertOne({
     address,
